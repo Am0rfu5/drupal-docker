@@ -1,0 +1,370 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+#
+############## DRUSH ####################
+###### SHOUUD WE INCLUDE DRUSH ALIASES ##
+#########################################
+
+# used for drush XDEBUG
+#export XDEBUG_CONFIG="idekey=PHPSTORM"
+
+function blt() {
+  if [[ ! -z ${AH_SITE_ENVIRONMENT} ]]; then
+    PROJECT_ROOT="/var/www/html/${AH_SITE_GROUP}.${AH_SITE_ENVIRONMENT}"
+  elif [ "`git rev-parse --show-cdup 2> /dev/null`" != "" ]; hen
+    PROJECT_ROOT=$(git rev-parse --show-cdup)
+  else
+    PROJECT_ROOT="."
+  fi
+
+  if [ -f "$PROJECT_ROOT/vendor/bin/blt" ]; then
+    $PROJECT_ROOT/vendor/bin/blt "$@"
+
+  # Check for local BLT.
+  elif [ -f "./vendor/bin/blt" ]; then
+    ./vendor/bin/blt "$@"
+
+  else
+    echo "You must run this command from within a BLT-generated project."
+    return 1
+  fi
+}
+
+
+export NVM_DIR="/root/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+
+# Load workspace HTTP proxy configuration, if any
+if [ -f ${HOME}/.workspace-http-proxy.sh.env ]; then
+    . ${HOME}/.workspace-http-proxy.sh.env
+fi
+
+set -o emacs
+# Do not exit on EOF. To exit the shell type `exit'
+set -o ignoreeof
+# Do not allow output redirection (>) to overwrite an existing file
+set -o noclobber
+# set the core limit
+ulimit -c 10240
+
+# As a platform engineer, I want to upgrade SHELL history to "remember long time"
+set history=1024
+set savehist=1024
+
+## Olde skool :-/  export LDFLAGS='-lpthread' #Old skool 
+## Slackware: export LS_OPTIONS='--8bit --color=tty -F -b -T 0'
+## export LS_OPTIONS='--color=tty -F -b --author'
+export LS_OPTIONS='-F --color=auto'
+
+# Aliases
+alias ls="/bin/ls $LS_OPTIONS"
+alias ll='ls -l'
+alias lsd='ls -ld'
+alias la='ls -a'
+alias lf='ls -F'
+alias lr='ls -alFRt'
+alias lx='ls -xF'
+alias llar='ls -laFR'
+alias lt='ls -lartF'
+alias lrt='ls -lrt'
+
+alias home='cd ${HOME}'
+alias up='cd ..'
+alias up2='cd ../.'
+alias up3='cd ../../..'
+alias up4='cd ../../../..'
+alias up5='cd ../../../../..'
+alias pe='printenv'
+alias senv='env | sort'
+alias pu='pushd'
+alias po='popd'
+alias pud='pushd .'
+alias rot='pushd +1'
+alias jobs='jobs -l'
+alias mroe=more
+alias lses=less
+alias lsse=less
+alias l=ls
+alias f=file
+alias c=cat
+alias m=more
+alias j=jobs
+alias k=kill
+alias d=dirs
+alias h=history
+alias his=history
+alias hm='history | less'
+alias sy3='sync; sync; sync; echo "sync 3 times ..."'
+alias del='rm -i'
+alias bye=exit
+alias ciao=exit
+
+## Some quick GIT alias
+alias gpull='git pull origin master'
+alias gpush='git push origin master'
+# As a platform engineer, I want to configure Git cache to remember my password for one month on average
+alias set_git_cache='git config --global credential.helper "cache --timeout=2548800" '
+
+# alias macjava=/usr/libexec/java_home
+alias gpull='git pull origin $_GIT_BRANCH'
+alias gpush='git push origin $_GIT_BRANCH'
+alias gpull_peat='git pull peat $_GIT_BRANCH'
+alias gpush_peat='git push peat $_GIT_BRANCH'
+
+# Xdebug
+alias xs='xdebug stop'
+alias xd='xdebug start'
+alias xn='xdebug status'
+
+function removeFromPath() {
+    export PATH=$(echo $PATH | sed -E -e "s;:$1;;" -e "s;$1:?;;")
+    ### echo -e "\n*DEBUG setting now to PATH=$PATH"
+}
+
+function traverseAncestorsForGitRepository()
+{
+    local dir=`pwd`
+    local savedDir=$dir
+    export _GIT_BRANCH="__UNKNOWN__"
+    while [ "$dir" != "/" ]
+    do
+      if [ -d ".git" ]; then
+          # echo "*DEBUG* Found Git repository inside  ${dir} "
+          export _GIT_BRANCH=$( git branch | cut -d " " -f2)
+          break
+      fi
+      cd ..
+      dir=`pwd`
+      # echo "*DEBUG* dir=$dir"
+    done
+    cd $savedDir
+}
+
+# This following code is only for Apple Terminal (Mac OS X)
+# Check if this function: update_terminal_cwd() is defined
+type update_terminal_cwd > /dev/null 2>&1; status=$?
+if [ $status -eq 0 ]; then
+  PROMPT_COMMAND="traverseAncestorsForGitRepository; update_terminal_cwd"
+else
+  if [ "${TERM_PROGRAM}" = "iTerm.app" ]; then
+    PROMPT_COMMAND="traverseAncestorsForGitRepository; updateITerm2AppTitle"
+  else
+    PROMPT_COMMAND="traverseAncestorsForGitRepository"
+  fi
+fi
+
+# *DONE*: Task for me to find out the equivalent shell function to change the title bar on iTerm2 shell application.
+function updateITerm2AppTitle() {
+    ## See also: https://apple.stackexchange.com/questions/324124/how-can-i-set-the-iterm2-window-title-to-be-the-same-no-matter-which-pane-is-sel
+    ## and also: https://groups.google.com/forum/#!topic/iterm2-discuss/MpOWDIn6QTs
+    if [ "$PWD" = "$HOME" ]; then
+      echo -ne "\033]0; ~ \007"
+    else
+      echo -ne "\033]0;$(basename $PWD)\007"
+    fi
+}
+
+
+
+
+## See this Apple Support Discussion https://discussions.apple.com/thread/4158054
+alias restart-webcam='sudo killall VDCAssistant'
+
+
+
+alias vibashpro='vi ~/.bash_profile'
+alias rebashpro='. ~/.bash_profile'
+
+## Where is GO Language installed?
+export GO_HOME=/opt/go
+
+## Where is Java installed?
+#export JAVA_HOME=`/usr/libexec/java_home`
+#export JAVA_HOME=/usr/lib/jvm/jdk1.8.0/jdk1.8.0_181
+#export JAVA8_HOME=/usr/lib/jvm/jdk1.8.0/jdk1.8.0_181
+
+#export JAVAFX_HOME=${JAVA_HOME}
+
+# Where is Scala installed (Mac OS X)?
+## export SCALA_HOME=/Library/opt/scala/scala-2.11.7
+export SCALA_HOME=${HOME}/.sdkman/candidates/sbt/current
+
+# Where is SBT installed (Mac OS X)?
+## export SBT_HOME=/Library/opt/sbt/sbt-0.13.12
+export SBT_HOME=${HOME}/.sdkman/candidates/sbt/current/bin/sbt
+
+# Where is Groovy installed (SDK Man)
+## export GROOVY_HOME=${HOME}/.sdkman/groovy/current
+export GROOVY_HOME=${HOME}/.sdkman/candidates/groovy/current
+
+# Where is Ant installed (Mac OS X)?
+export ANT_HOME=/Library/opt/apache-ant-1.10.5
+
+# Where is Maven installed (Mac OS X)?
+export M2_HOME=/Library/opt/apache-maven-3.5.4
+
+# http://stackoverflow.com/questions/13161387/set-the-permgen-size-for-the-child-jvm-processes-that-maven-will-spin-off
+export MAVEN_OPTS="-XX:MaxPermSize=256m -Xms512m -Xmx1024m"
+
+# Where is Gradle installed (Mac OS X)?
+export GRADLE_HOME=${HOME}/.sdkman/candidates/gradle/current
+
+# Where is Node installed?
+export NODE_PATH=/usr/local/lib/node_modules
+
+## Where is IntelliJ installed?
+export INTELLIJ_HOME=/opt/intellij-idea
+
+## Define PATH
+export PATH=.:${HOME}/bin:${HOME}/.local/bin:\
+${SCALA_HOME}/bin:${SBT_HOME}/bin:\
+${GROOVY_HOME}/bin:${M2_HOME}/bin:${ANT_HOME}/bin:${GRADLE_HOME}/bin:\
+${GO_HOME}/bin:\
+#${JAVA_HOME}/bin:${JAVA_HOME}/jre/bin:\
+${INTELLIJ_HOME}/bin:\
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+## Keep a copy of the original PATH
+export ORIGINAL_PATH=${HOME}/bin:${HOME}/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games
+
+### This is the original PS1 on Debian (e.g Ubuntu or Linux Mint)
+#### "${debian_chroot:+($debian_chroot)}\u@\h \w \$ "
+export SAVED_PS1="${debian_chroot:+($debian_chroot)}\u@\h \w [\$HISTCMD] \$ "
+
+## Ansi Color XTerm (tested on LinuxMint )
+## See also https://askubuntu.com/questions/558280/changing-colour-of-text-and-background-of-terminal
+#export PS1="\e[38;5;034m\u@\h \e[0m\e[38;5;039m\W\e[0m [\$HISTCMD] > "
+
+## See also https://stackoverflow.com/questions/2024884/commandline-overwrites-itself-when-the-commands-get-too-long
+BLACK="\[\033[49;1;30m\]"
+LTRED="\[\033[49;1;31m\]"
+LTGREEN="\[\033[49;1;32m\]"
+LTYELLOW="\[\033[49;1;33m\]"
+LTBLUE="\[\033[49;1;34m\]"
+LTMAGENTA="\[\033[49;1;35m\]"
+LTCYAN="\[\033[49;1;36m\]"
+WHITE="\[\033[49;1;37m\]"
+CLEAR="\[\033[0m\]"
+LIGHT_GRAY="\[\033[49;1;33m\]"
+        ## echo "This is not Darwin"
+
+export PS1="$LTRED[\@]$LTGREEN\u$LTMAGENTA@$LTBLUE\h:$LIGHT_GRAY\W$CLEAR>"
+## export PS1="$LTGREEN\u$LTCYAN@\h:$LIGHT_GRAY\W$CLEAR [\$HISTCMD] ❯ "
+
+# Add the Git Bash completion, if it exists
+
+if [ -f ${HOME}/git-completion.bash -a -r ${HOME}/git-completion.bash ]; then
+	#### echo ${HOME}/git-completion.bash (see also https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash )
+	. ${HOME}/git-completion.bash
+fi
+
+
+# Something for Linux and Mac OS X to remember credential login for a period of timeout *PP* 01-March-2018
+alias setup_git_cache='git config --global credential.helper "cache --timeout=2548800" '
+
+
+# Git configuration is now inside a function. We only have to perform this set once per user login *PP*
+function _configureGitAliasPerUser()
+{
+    ## Helpful Git aliases
+    git config --global alias.co checkout
+    git config --global alias.br branch
+    git config --global alias.ci commit
+    git config --global alias.st status
+    git config --global alias.unstage 'reset HEAD --'
+    git config --global alias.last 'log -1 HEAD'
+    git config --global alias.hdiff 'diff HEAD^ HEAD'
+    git config --global alias.hd 'diff HEAD^ HEAD'
+
+    # Show me all git commits in short form
+    git config --global alias.ls 'log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%C(cyan)\\ [%cn]" --decorate'
+    # Show me all git all changed files in short format
+    git config --global alias.ll 'log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%C(cyan)\\ [%cn]" --decorate --numstat'
+    # Show me changes list with no colours if I need to chain the out put with Unix pipes:
+    git config --global alias.lnc 'log --pretty=format:"%h\\ %s\\ [%cn]"'
+    # Show me changes with dates
+    git config --global alias.lds 'log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%C(cyan)\\ [%cn]" --decorate --date=short'
+    # Show me the history of a file, with diffs
+    git config --global alias.filelog 'log -u'
+    git config --global alias.fl 'log -u'
+    # Show me modified files in the last commit
+    git config --global alias.dl '!git ll -1'
+    # Find me a file in the codebase e.g. 'git ff foo.java' or 'git ff build.gradle'
+    git config --global alias.ff '!git ls-files | grep -i '
+    ## Grep the entire codebase for a particular string ignore case!  e.g 'git agrep "mt103"''
+    git config --global alias.agrep 'grep -Ii'
+
+    # List all of my Git aliases, because sometimes I forget them
+    git config --global alias.la '!git config -l | grep alias | cut -c 7- | sort'
+
+    # Git stash
+    git config --global alias.sl 'stash list '
+    git config --global alias.sa 'stash apply '
+    git config --global alias.ss 'stash save '
+
+    ## Reset aliases
+    # Reset the current HEAD to the specified state (How do I undo the most recent commit I made in Git that I have not yet pushed? <img draggable="false" class="emoji" alt="😉" src="https://s.w.org/images/core/emoji/11/svg/1f609.svg"> *PP*
+    # See  also https://stackoverflow.com/questions/927358/how-to-undo-the-most-recent-commits-in-git
+    git config --global alias.r 'reset'
+    # Reset softly to the previous checked in version
+    git config --global alias.r1 'reset HEAD^'
+    # Reset softly to the previous-previous checked in version
+    git config --global alias.r2 'reset HEAD^^'
+    # *WARNING* Advanced users only see https://stackoverflow.com/questions/9529078/how-do-i-use-git-reset-hard-head-to-revert-to-a-previous-commit
+    # Perhaps, get clarification from your Anchor beforehand *DANGEROUS* if you don't what you are doing?
+    # Reset by throwing away your uncommitted changes, perhaps stash them first
+    git config --global alias.rh 'reset --hard'
+    # Reset hard to the previous version
+    git config --global alias.rh1 'reset HEAD^ --hard'
+    # Reset hard to the previous-previous version
+    git config --global alias.rh2 'reset HEAD^^ --hard'
+    # Reset hard to the previous-previous-previous version
+    git config --global alias.rh3 'reset HEAD^^^ --hard'
+
+
+    ## The next alias does not work on Santander stock self-service Git *PP* 01-March-2018
+    # git config --global alias.glog log --pretty=format:"%h %s" --graph
+
+    ## From Ales Setinc
+    ##   "I found this little visual hack for "git log" command. I found it very useful, especial if you add it to your .bash_profile as a new command. Check the image attached."
+    ## <img draggable="false" class="emoji" alt="🙂" src="https://s.w.org/images/core/emoji/11/svg/1f642.svg">
+    alias git-log='git log --graph --pretty="format:%C(yellow)%h%Cred%d%Creset %s %C(green)(%ar) %C(cyan)%an%Creset"'
+    alias gitlog=git-log
+    alias glog=git-log
+    alias gtree='git log --graph --decorate --oneline'
+}
+
+# Here we attempt to avoid the error error: "could not lock config file /Users/xkc3198/.gitconfig: File exists"
+# by using our own lock file. We also move the Git configuration to a Shell function
+# *PP* 26-Mar-2018
+# https://stackoverflow.com/questions/185451/quick-and-dirty-way-to-ensure-only-one-instance-of-a-shell-script-is-running-at
+_USER_GIT_CONFIGURE_LOCKFILE=${HOME}/.user-git-configure.lock
+if [ -e ${_USER_GIT_CONFIGURE_LOCKFILE} ] && kill -0 `cat ${_USER_GIT_CONFIGURE_LOCKFILE}`; then
+    [ "$TERM" = "xterm-256color" ] && echo "already running - lock file: ${_USER_GIT_CONFIGURE_LOCKFILE}"
+else
+    # make sure the lockfile is removed when we exit and then claim it
+    trap "/bin/rm -f ${_USER_GIT_CONFIGURE_LOCKFILE}" INT TERM EXIT
+    echo $$ > ${_USER_GIT_CONFIGURE_LOCKFILE}
+
+    _configureGitAliasPerUser
+
+    /bin/rm -f ${_USER_GIT_CONFIGURE_LOCKFILE}
+fi
+
+
+# fini
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+## This is for Ruby Version Manager
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+
+## This is for Node Version Manager
+## This was already covered earlier
+#export NVM_DIR="$HOME/.nvm"
+#[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+
+cd /var/www/schwab
+## END
+

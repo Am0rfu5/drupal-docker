@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  drupal:
+    build:
+      context: ./dockerfiles/drupal
+    container_name: '${COMPOSE_PROJECT_NAME}-php-${PHP_VERSION}'
+    volumes:
+      - ${DOCUMENT_ROOT}:${APACHE_DOCUMENT_ROOT}
+      - ./config/php/php.ini:/usr/local/etc/php/php.ini
+      - ./config/vhosts:/etc/apache2/sites-enabled
+      - ./log/apache2:/var/log/apache2
+      - ${DRUPAL_LOCAL_ROOT}:${DRUPAL_SERVER_ROOT}
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+        #- ./drupal/config/entrypoint.sh:/entrypoint.sh
+        #entrypoint: ["/entrypoint.sh"] 
+    
+    environment:
+      APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT}
+      VIRTUALHOST_SERVER_NAME: ${COMPOSE_PROJECT_NAME}
+      XDEBUG_MODE: develop,debug
+      XDEBUG_CONFIG:
+        client_host=host.docker.internal
+        start_with_request=yes
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - drupal
+    volumes:
+      - ./web3-security/book:/usr/share/nginx/html
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/dns-digitalocean
+    container_name: certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/certbot/log:/var/log/letsencrypt
+      - ./config/digitalocean/digitalocean.ini:/etc/letsencrypt/digitalocean.ini 
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"

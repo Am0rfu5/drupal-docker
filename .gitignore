@@ -1,0 +1,9 @@
+data/
+log/
+.env
+test
+drupal-v1/
+drupal-v2/
+db_backups/
+docker-compose.yml
+config/digitalocean/digitalocean.ini
